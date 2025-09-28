@@ -1,0 +1,241 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > JwtService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.practicum.authentication_service.service</a>
+</div>
+
+<h1>Coverage Summary for Class: JwtService (com.practicum.authentication_service.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">JwtService</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/62)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.practicum.authentication_service.service;
+&nbsp;
+&nbsp;import com.practicum.authentication_service.Model.User;
+&nbsp;import com.practicum.authentication_service.repository.EnrollmentRepository;
+&nbsp;import io.jsonwebtoken.*;
+&nbsp;import io.jsonwebtoken.io.Decoders;
+&nbsp;import io.jsonwebtoken.security.Keys;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;import io.micrometer.core.instrument.Timer;
+&nbsp;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;import java.security.Key;
+&nbsp;import java.util.Date;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Component
+<b class="nc">&nbsp;public class JwtService {</b>
+&nbsp;    public static final String SECRET = &quot;5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437&quot;;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private EnrollmentRepository enrollmentRepository;
+&nbsp;
+&nbsp;
+&nbsp;    public String getId(String username) throws Exception {
+&nbsp;        try {
+<b class="nc">&nbsp;            Optional&lt;User&gt; user = enrollmentRepository.findByEmail(username);</b>
+<b class="nc">&nbsp;            if (user.isPresent()) {</b>
+<b class="nc">&nbsp;                return user.get().getId();</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                throw new Exception(&quot;User not found&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception exception) {</b>
+<b class="nc">&nbsp;            throw exception;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean validateToken(String token, JwtMetricsService jwtMetricsService) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Jws&lt;Claims&gt; claimsJws = Jwts.parserBuilder()</b>
+<b class="nc">&nbsp;                    .setSigningKey(getSignKey())</b>
+<b class="nc">&nbsp;                    .build()</b>
+<b class="nc">&nbsp;                    .parseClaimsJws(token);</b>
+<b class="nc">&nbsp;            Date expiration = claimsJws.getBody().getExpiration();</b>
+<b class="nc">&nbsp;            boolean isValid = expiration.after(new Date());</b>
+<b class="nc">&nbsp;            if(isValid){</b>
+<b class="nc">&nbsp;                jwtMetricsService.incrementValidTokenCounter();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return isValid;</b>
+<b class="nc">&nbsp;        } catch (ExpiredJwtException ex) {</b>
+<b class="nc">&nbsp;            jwtMetricsService.incrementExpiredTokenCount();</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Token expired&quot;);</b>
+<b class="nc">&nbsp;        } catch (UnsupportedJwtException ex) {</b>
+<b class="nc">&nbsp;            jwtMetricsService.incrementInvalidTokenCount();</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Unsupported JWT&quot;);</b>
+<b class="nc">&nbsp;        } catch (MalformedJwtException ex) {</b>
+<b class="nc">&nbsp;            jwtMetricsService.incrementInvalidTokenCount();</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Malformed JWT&quot;);</b>
+<b class="nc">&nbsp;        } catch (SignatureException ex) {</b>
+<b class="nc">&nbsp;            jwtMetricsService.incrementInvalidTokenCount();</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Invalid signature&quot;);</b>
+<b class="nc">&nbsp;        } catch (IllegalArgumentException ex) {</b>
+<b class="nc">&nbsp;            jwtMetricsService.incrementInvalidTokenCount();</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Empty or null token&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String createToken(Map&lt;String, String&gt; claims, String userName) {
+<b class="nc">&nbsp;        String token = Jwts.builder()</b>
+<b class="nc">&nbsp;                .setClaims(claims)</b>
+<b class="nc">&nbsp;                .setSubject(userName)</b>
+<b class="nc">&nbsp;                .setIssuedAt(new Date(System.currentTimeMillis()))</b>
+<b class="nc">&nbsp;                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))</b>
+<b class="nc">&nbsp;                .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();</b>
+&nbsp;
+<b class="nc">&nbsp;        return token;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Key getSignKey() {
+<b class="nc">&nbsp;        byte[] keyBytes = Decoders.BASE64.decode(SECRET);</b>
+<b class="nc">&nbsp;        return Keys.hmacShaKeyFor(keyBytes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String extractSubject(String token) {
+<b class="nc">&nbsp;        return Jwts.parser()</b>
+<b class="nc">&nbsp;                .setSigningKey(SECRET.getBytes(StandardCharsets.UTF_8))</b>
+<b class="nc">&nbsp;                .parseClaimsJws(token)</b>
+<b class="nc">&nbsp;                .getBody()</b>
+<b class="nc">&nbsp;                .getSubject();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Map&lt;String, String&gt; extractAttributes(String token, JwtMetricsService jwtMetricsService) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Timer.Sample sample = Timer.start();</b>
+<b class="nc">&nbsp;            Claims claims = Jwts.parserBuilder()</b>
+<b class="nc">&nbsp;                    .setSigningKey(getSignKey())</b>
+<b class="nc">&nbsp;                    .build()</b>
+<b class="nc">&nbsp;                    .parseClaimsJws(token)</b>
+<b class="nc">&nbsp;                    .getBody();</b>
+&nbsp;
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; rawClaims = claims;</b>
+<b class="nc">&nbsp;            Map&lt;String, String&gt; attributes = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;            for (Map.Entry&lt;String, Object&gt; entry : rawClaims.entrySet()) {</b>
+<b class="nc">&nbsp;                if (!isStandardClaim(entry.getKey())) {</b>
+<b class="nc">&nbsp;                    attributes.put(entry.getKey(), String.valueOf(entry.getValue()));</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            sample.stop(jwtMetricsService.getTokenVerificationTimer());</b>
+<b class="nc">&nbsp;            return attributes;</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+&nbsp;            // Handle any parsing errors
+<b class="nc">&nbsp;            throw ex;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean isStandardClaim(String key) {
+<b class="nc">&nbsp;        return key.equals(&quot;sub&quot;) || key.equals(&quot;exp&quot;) || key.equals(&quot;iat&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-07-17 13:53</div>
+</div>
+</body>
+</html>
