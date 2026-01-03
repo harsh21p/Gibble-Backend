@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 		<spring-cloud.version>2024.0.1</spring-cloud.version>
 <!--		<sonar.projectKey>harshad.pachore2_2025-mcm-ias-problem-5_discovery-server</sonar.projectKey>-->
 <!--		<sonar.projectName>2025-MCM-IAS-Problem-5 - Discovery Server</sonar.projectName>-->

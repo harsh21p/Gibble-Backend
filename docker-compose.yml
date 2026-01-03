@@ -1,0 +1,135 @@
+version: '3.9'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9094:9094"
+
+  redis:
+    image: redis:7.2
+    ports:
+      - "6379:6379"
+
+  postgres-identity:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: identity_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+
+  postgres-profile:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: profile_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+
+  postgres-learning:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: learning_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+
+  discovery-server:
+    build:
+      context: .
+      dockerfile: discovery-server/Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_CLIENT_ENABLED=true
+    depends_on:
+      - postgres-identity
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: authentication-service/Dockerfile
+    environment:
+      - EUREKA_SERVER=http://discovery-server:8761/eureka
+      - IDENTITY_DB_URL=jdbc:postgresql://postgres-identity:5432/identity_service
+      - IDENTITY_DB_USER=postgres
+      - IDENTITY_DB_PASSWORD=postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - JWT_SECRET=YWN0aXZlTGVhcm5pbmdQbGF0Zm9ybVN1cGVyU2VjcmV0S2V5MTIz
+    depends_on:
+      - discovery-server
+      - postgres-identity
+      - kafka
+
+  profile-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    environment:
+      - EUREKA_SERVER=http://discovery-server:8761/eureka
+      - PROFILE_DB_URL=jdbc:postgresql://postgres-profile:5432/profile_service
+      - PROFILE_DB_USER=postgres
+      - PROFILE_DB_PASSWORD=postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=YWN0aXZlTGVhcm5pbmdQbGF0Zm9ybVN1cGVyU2VjcmV0S2V5MTIz
+    depends_on:
+      - discovery-server
+      - postgres-profile
+      - kafka
+      - redis
+
+  learning-service:
+    build:
+      context: .
+      dockerfile: inventory-service/Dockerfile
+    environment:
+      - EUREKA_SERVER=http://discovery-server:8761/eureka
+      - LEARNING_DB_URL=jdbc:postgresql://postgres-learning:5432/learning_service
+      - LEARNING_DB_USER=postgres
+      - LEARNING_DB_PASSWORD=postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=YWN0aXZlTGVhcm5pbmdQbGF0Zm9ybVN1cGVyU2VjcmV0S2V5MTIz
+    depends_on:
+      - discovery-server
+      - postgres-learning
+      - kafka
+      - redis
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_SERVER=http://discovery-server:8761/eureka
+    depends_on:
+      - discovery-server
+      - identity-service
+      - profile-service
+      - learning-service

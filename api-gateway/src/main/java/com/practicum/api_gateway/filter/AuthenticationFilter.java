@@ -39,23 +39,23 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     authHeader = authHeader.substring(7);
                 }
-                ParameterizedTypeReference<ApiResponse<String>> responseType =
+                ParameterizedTypeReference<ApiResponse<Boolean>> responseType =
                         new ParameterizedTypeReference<>() {};
                 try {
                     Token token = new Token();
                     token.setToken(authHeader);
                     return webClientBuilder.build().post()
-                            .uri("http://authentication-service/api/authentication/auth/validate")
+                            .uri("http://identity-service/api/identity/auth/validate")
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(token)
                             .retrieve()
                             .toEntity(responseType)
                             .flatMap(responseEntity -> {
-                                System.out.println(responseEntity.getBody());
-                                if (responseEntity.getBody().isError() == false) {
+                                ApiResponse<Boolean> body = responseEntity.getBody();
+                                if (body != null && !body.isError()) {
                                     return chain.filter(exchange);
                                 } else {
-                                    return onError(exchange,  HttpStatus.UNAUTHORIZED,responseEntity.getBody().getData());
+                                    return onError(exchange,  HttpStatus.UNAUTHORIZED,"Unauthorized");
                                 }
                             }).onErrorResume(e -> onError(exchange,HttpStatus.UNAUTHORIZED,"401 Unauthorized from Auth Server"));
                 } catch (Exception e) {

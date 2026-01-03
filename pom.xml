@@ -12,26 +12,28 @@
     </parent>
 
     <groupId>com.practicum</groupId>
-    <artifactId>Inventory-Management-System</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>online-learning-platform</artifactId>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <modules>
         <module>discovery-server</module>
         <module>api-gateway</module>
-        <module>authentication-service</module>
-        <module>inventory-service</module>
-        <module>user-service</module>
+        <module>identity-service</module>
+        <module>learning-service</module>
+        <module>profile-service</module>
     </modules>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
+        <lombok.version>1.18.32</lombok.version>
         <sonar.java.binaries>target/classes</sonar.java.binaries>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.projectKey>2025-MCM-IAS-Problem-5</sonar.projectKey>
-        <sonar.projectName>2025-MCM-IAS-Problem-5</sonar.projectName>
+        <sonar.projectKey>online-learning-platform</sonar.projectKey>
+        <sonar.projectName>online-learning-platform</sonar.projectName>
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <!-- Explicitly define module paths -->
         <sonar.modules>api-gateway,authentication-service,discovery-server,inventory-service,user-service</sonar.modules>
@@ -46,6 +48,11 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -92,7 +99,7 @@
                 </executions>
             </plugin>
         </plugins>
-        <finalName>Inventory Management System</finalName>
+        <finalName>Online Learning Platform</finalName>
     </build>
 
 </project>
